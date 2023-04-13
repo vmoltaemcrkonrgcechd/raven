@@ -6,14 +6,16 @@ import (
 )
 
 type Back struct {
-	Dir   string
-	GoMod string
+	Dir     string
+	GoMod   string
+	Modules map[string]*Module
 }
 
 func New(dir, goMod string) *Back {
 	return &Back{
-		Dir:   dir,
-		GoMod: goMod,
+		Dir:     dir,
+		GoMod:   goMod,
+		Modules: make(map[string]*Module),
 	}
 }
 
