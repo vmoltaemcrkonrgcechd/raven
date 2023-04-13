@@ -23,9 +23,8 @@ const (
 
 const (
 	MainPkg     = "main"
-	UseCasePkg  = "usecase"
 	RepoPkg     = "repo"
-	HTTPPkg     = "http"
+	RoutesPkg   = "routes"
 	EntityPkg   = "entity"
 	AppPkg      = "app"
 	PostgresPkg = "postgres"
@@ -34,9 +33,8 @@ const (
 
 const (
 	MainPath     = "/cmd/app"
-	UseCasePath  = "/internal/" + UseCasePkg
-	RepoPath     = "/internal/usecase/" + RepoPkg
-	HTTPPath     = "/internal/controller/" + HTTPPkg
+	RepoPath     = "/internal/" + RepoPkg
+	RoutesPath   = "/internal/" + RoutesPkg
 	EntityPath   = "/internal/" + EntityPkg
 	AppPath      = "/internal/" + AppPkg
 	PostgresPath = "/pkg/" + PostgresPkg
@@ -53,7 +51,7 @@ func (b *Back) ProjectInit() error {
 		return nil
 	}
 
-	if err = os.MkdirAll(b.Dir+HTTPPath, Perm); err != nil {
+	if err = os.MkdirAll(b.Dir+RoutesPath, Perm); err != nil {
 		return nil
 	}
 
@@ -77,14 +75,44 @@ func (b *Back) ProjectInit() error {
 		return err
 	}
 
+	if err = b.InstallDependencies(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (b *Back) GoModInit() error {
 	cmd := exec.Command("go", "mod", "init", b.GoMod)
-	cmd.Dir = "./" + b.Dir
+	cmd.Dir = b.Dir
 	if err := cmd.Run(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (b *Back) InstallDependencies() error {
+	var (
+		err   error
+		cmd   *exec.Cmd
+		names = []string{
+			"github.com/gofiber/fiber/v2",
+			"github.com/gofiber/swagger",
+			"github.com/lib/pq",
+			"github.com/Masterminds/squirrel",
+			"github.com/ilyakaznacheev/cleanenv",
+		}
+	)
+
+	for _, name := range names {
+		cmd = exec.Command("go", "get", name)
+
+		cmd.Dir = b.Dir
+
+		if err = cmd.Run(); err != nil {
+			return err
+		}
 	}
 
 	return nil
