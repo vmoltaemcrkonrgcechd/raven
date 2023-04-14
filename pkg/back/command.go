@@ -8,6 +8,17 @@ type CommandJSON struct {
 	Info  json.RawMessage `json:"info"`
 }
 
-type AddOrEditCommand struct {
+type CreateOrUpdateCommand struct {
 	Columns []string `json:"columns"`
 }
+
+type ReadCommand struct {
+	Columns []string `json:"columns"`
+}
+
+const (
+	CreateType = "create"
+	ReadType   = "read"
+	UpdateType = "update"
+	DeleteType = "delete"
+)

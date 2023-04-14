@@ -1,0 +1,32 @@
+{
+  "pgURL": "postgresql://postgres:130263@:5432/pocu?sslmode=disable",
+  "dirName": "DELME",
+  "goMod": "DELME",
+  "commands": [
+    {
+      "type": "create",
+      "table": "weapon",
+      "info": {
+        "columns": ["name", "attack", "weight"]
+      }
+    },
+    {
+      "type": "read",
+      "table": "weapon",
+      "info": {
+        "columns": ["weapon_id", "name", "attack", "weight"]
+      }
+    },
+    {
+      "type": "update",
+      "table": "weapon",
+      "info": {
+        "columns": ["name", "attack", "weight"]
+      }
+    },
+    {
+      "type": "delete",
+      "table": "weapon"
+    }
+  ]
+}
