@@ -51,6 +51,7 @@ const (
 const (
 	MainPkg     = "main"
 	RepoPkg     = "repo"
+	UseCasePkg  = "usecase"
 	RoutesPkg   = "routes"
 	EntityPkg   = "entity"
 	AppPkg      = "app"
@@ -60,7 +61,7 @@ const (
 
 const (
 	MainPath     = "/cmd/app"
-	RepoPath     = "/internal/" + RepoPkg
+	RepoPath     = "/internal/" + UseCasePkg + "/" + RepoPkg
 	RoutesPath   = "/internal/" + RoutesPkg
 	EntityPath   = "/internal/" + EntityPkg
 	AppPath      = "/internal/" + AppPkg
