@@ -1,32 +1,55 @@
 {
-  "pgURL": "postgresql://postgres:130263@:5432/pocu?sslmode=disable",
-  "dirName": "DELME",
-  "goMod": "DELME",
+  "pgURL": "postgresql://postgres:4100@:4100/example?sslmode=disable",
+  "goMod": "DELETE_ME",
+  "dirName": "DELETE_ME",
   "commands": [
     {
       "type": "create",
-      "table": "weapon",
+      "table": "article",
       "info": {
-        "columns": ["name", "attack", "weight"]
+        "columns": ["name", "user_id"]
       }
     },
     {
       "type": "read",
-      "table": "weapon",
+      "table": "article",
       "info": {
-        "columns": ["weapon_id", "name", "attack", "weight"]
+        "columns": ["article_id", "name"],
+        "join": [
+          {
+            "type": "inner",
+            "table": "user",
+            "columns": ["user_id", "username"],
+            "use": "user_id"
+          },
+          {
+            "type": "left",
+            "table": "article_like",
+            "use": "article_id",
+            "join": [
+              {
+                "type": "left",
+                "table": "like",
+                "columns": ["like_id", "user_id"],
+                "use": "like_id",
+                "many": true,
+                "as": "likes"
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "type": "update",
-      "table": "weapon",
+      "table": "article",
       "info": {
-        "columns": ["name", "attack", "weight"]
+        "columns": ["name", "user_id"]
       }
     },
     {
       "type": "delete",
-      "table": "weapon"
+      "table": "article"
     }
   ]
 }
