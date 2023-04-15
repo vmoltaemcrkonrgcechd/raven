@@ -1,5 +1,7 @@
 package value
 
+import "raven/pkg/utils"
+
 type Value struct {
 	Name      string
 	Type      string
@@ -18,4 +20,8 @@ func New(name, typ, pkg, tableName string, canBeNil, many bool) *Value {
 		Many:      many,
 		TableName: tableName,
 	}
+}
+
+func (val *Value) PublicName() string {
+	return utils.ToPascalCase(val.Name)
 }

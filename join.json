@@ -26,7 +26,15 @@
                 "columns": ["like_id", "user_id"],
                 "use": "like_id",
                 "many": true,
-                "as": "likes"
+                "as": "likes",
+                "join": [
+                  {
+                    "type": "inner",
+                    "table": "user",
+                    "columns": ["user_id", "username"],
+                    "use": "user_id"
+                  }
+                ]
               }
             ]
           }

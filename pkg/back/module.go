@@ -2,6 +2,7 @@ package back
 
 import (
 	"errors"
+	"fmt"
 	"raven/pkg/postgres"
 	"raven/pkg/utils"
 	"raven/pkg/value"
@@ -29,7 +30,7 @@ func (mod *Module) Read(cmd ReadCommand) error {
 		return err
 	}
 
-	str.Log(0)
+	fmt.Println(string(str.Generate()))
 
 	return nil
 }
@@ -42,13 +43,13 @@ func (mod *Module) Delete() error {
 	return nil
 }
 
-func (mod *Module) newStruct(tableName, structName string, canBeNil, many bool, columns []string) (*StructField, error) {
+func (mod *Module) newStruct(tableName, structName string, canBeNil, many bool, columns []string, tag string) (*StructField, error) {
 	table, err := mod.pg.GetTable(tableName)
 	if err != nil {
 		return nil, err
 	}
 
-	structField := NewStructField(value.New(structName, structName, EntityPkg, "", canBeNil, many))
+	structField := NewStructField(value.New(structName, structName, EntityPkg, "", canBeNil, many), tag)
 
 	for _, columnName := range columns {
 		var column *postgres.Column
@@ -62,7 +63,7 @@ func (mod *Module) newStruct(tableName, structName string, canBeNil, many bool, 
 		}
 
 		structField.Struct = append(structField.Struct,
-			NewStructField(value.New(column.Name, typ, "", tableName, column.CanBeNil, false)))
+			NewStructField(value.New(column.Name, typ, "", tableName, column.CanBeNil, false), tag))
 	}
 
 	return structField, nil
@@ -75,7 +76,7 @@ func (mod *Module) joinStruct(tableName, structName string,
 		structField *StructField
 		err         error
 	)
-	structField, err = mod.newStruct(tableName, structName, canBeNil, many, columns)
+	structField, err = mod.newStruct(tableName, structName, canBeNil, many, columns, JSONTag)
 	if err != nil {
 		return nil, err
 	}
