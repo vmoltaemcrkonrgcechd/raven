@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
@@ -68,16 +70,35 @@ func New(pgURL string) (*Postgres, error) {
 	return pg, nil
 }
 
+func (pg *Postgres) GetTable(name string) (*Table, error) {
+	if _, ok := pg.Tables[name]; !ok {
+		return nil, errors.New(fmt.Sprintf("таблицы с именем %s не существует", name))
+	}
+
+	return pg.Tables[name], nil
+}
+
 func (pg *Postgres) getTable(name string) *Table {
 	if _, ok := pg.Tables[name]; !ok {
-		pg.Tables[name] = &Table{}
+		pg.Tables[name] = &Table{Name: name}
 	}
 
 	return pg.Tables[name]
 }
 
 type Table struct {
+	Name    string
 	Columns []*Column
+}
+
+func (t *Table) GetColumn(name string) (*Column, error) {
+	for _, column := range t.Columns {
+		if column.Name == name {
+			return column, nil
+		}
+	}
+
+	return nil, errors.New(fmt.Sprintf("колонки с именем %s не существует в таблице %s", name, t.Name))
 }
 
 func (t *Table) addColumn(column *Column) {

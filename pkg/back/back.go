@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"raven/pkg/postgres"
 )
 
 type Back struct {
@@ -12,14 +13,16 @@ type Back struct {
 	Dir     string
 	GoMod   string
 	Modules map[string]*Module
+	pg      *postgres.Postgres
 }
 
-func New(dir, goMod, pgURL string) *Back {
+func New(dir, goMod, pgURL string, pg *postgres.Postgres) *Back {
 	return &Back{
 		Dir:     dir,
 		GoMod:   goMod,
 		PgURL:   pgURL,
 		Modules: make(map[string]*Module),
+		pg:      pg,
 	}
 }
 
@@ -41,7 +44,12 @@ func ReadConfig(name string) error {
 		return err
 	}
 
-	return New(cfg.DirName, cfg.GoMod, cfg.PgURL).ExecCommands(cfg.Commands)
+	var pg *postgres.Postgres
+	if pg, err = postgres.New(cfg.PgURL); err != nil {
+		return err
+	}
+
+	return New(cfg.DirName, cfg.GoMod, cfg.PgURL, pg).ExecCommands(cfg.Commands)
 }
 
 const (
@@ -160,7 +168,7 @@ func (b *Back) ExecCommand(cmdJSON CommandJSON) error {
 		if err := json.Unmarshal(cmdJSON.Info, &cmd); err != nil {
 			return err
 		}
-		return b.Read(cmdJSON.Table, cmd.Columns)
+		return b.Read(cmdJSON.Table, cmd)
 
 	case UpdateType:
 		var cmd CreateOrUpdateCommand
@@ -191,7 +199,7 @@ func (b *Back) ExecCommands(commands []CommandJSON) error {
 
 func (b *Back) GetModule(table string) *Module {
 	if _, ok := b.Modules[table]; !ok {
-		b.Modules[table] = NewModule(table)
+		b.Modules[table] = NewModule(table, b.pg)
 	}
 
 	return b.Modules[table]
@@ -201,8 +209,8 @@ func (b *Back) Create(table string, columns []string) error {
 	return b.GetModule(table).Create(columns)
 }
 
-func (b *Back) Read(table string, columns []string) error {
-	return b.GetModule(table).Read(columns)
+func (b *Back) Read(table string, cmd ReadCommand) error {
+	return b.GetModule(table).Read(cmd)
 }
 
 func (b *Back) Update(table string, columns []string) error {
