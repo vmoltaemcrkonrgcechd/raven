@@ -28,15 +28,24 @@ func NewModule(table string, pg *postgres.Postgres) *Module {
 	return mod
 }
 
+var (
+	ErrNode = NewNode("err", "error", "", "", false, false, "", false)
+	IDNode  *Node
+)
+
 func (mod *Module) Create(columns []string) error {
+	err := mod.initIDNode()
+	if err != nil {
+		return err
+	}
+
 	rootName := mod.getName(EntityPkg, "create", mod.Table, "dto")
 
 	root := NewNode(
 		rootName, rootName, EntityPkg, mod.Table, false, false,
 		"", false)
 
-	_, err := mod.FillNode(root, columns, nil)
-	if err != nil {
+	if _, err = mod.FillNode(root, columns, nil); err != nil {
 		return err
 	}
 
@@ -46,7 +55,7 @@ func (mod *Module) Create(columns []string) error {
 		mod.getName(RepoPkg, "", CreateType, ""),
 		mod.Repo.Node,
 		[]*Node{root},
-		[]*Node{},
+		[]*Node{IDNode, ErrNode},
 	),
 	)
 
@@ -79,10 +88,20 @@ func (mod *Module) Read(cmd ReadCommand) error {
 }
 
 func (mod *Module) Update(columns []string) error {
+	err := mod.initIDNode()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (mod *Module) Delete() error {
+	err := mod.initIDNode()
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }
 
@@ -177,4 +196,30 @@ func (mod *Module) initRepo() {
 	mod.Repo = NewRepo(NewNode(mod.getName(RepoPkg, "", mod.Table, "repo"),
 		mod.getName(RepoPkg, "", mod.Table, "repo"), RepoPkg, "",
 		false, false, "", false).AddChild(node))
+}
+
+func (mod *Module) initIDNode() error {
+	if IDNode != nil {
+		return nil
+	}
+
+	table, err := mod.pg.GetTable(mod.Table)
+	if err != nil {
+		return err
+	}
+
+	var pk *postgres.Column
+	if pk, err = table.GetPK(); err != nil {
+		return err
+	}
+
+	var typ string
+	if typ, err = converter.PgToGoType(pk.Type); err != nil {
+		return err
+	}
+
+	IDNode = NewNode(pk.Name, typ, "",
+		mod.Table, false, false, "", false)
+
+	return nil
 }

@@ -101,6 +101,16 @@ func (t *Table) GetColumn(name string) (*Column, error) {
 	return nil, errors.New(fmt.Sprintf("колонки с именем %s не существует в таблице %s", name, t.Name))
 }
 
+func (t *Table) GetPK() (*Column, error) {
+	for _, column := range t.Columns {
+		if column.ConstraintType == "PRIMARY KEY" {
+			return column, nil
+		}
+	}
+
+	return nil, errors.New("")
+}
+
 func (t *Table) addColumn(column *Column) {
 	t.Columns = append(t.Columns, column)
 }
