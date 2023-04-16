@@ -14,7 +14,7 @@ type Node struct {
 	TableName string
 	Tag       string
 	Embedded  bool
-	Children  []*Node
+	Children  Nodes
 }
 
 func NewNode(name, typ, pkg, tableName string, canBeNil, many bool, tag string, embedded bool) *Node {
@@ -35,7 +35,7 @@ func (n *Node) AddChild(node *Node) *Node {
 	return n
 }
 
-func (n *Node) Generate() []byte {
+func (n *Node) Generate() string {
 	return utils.ExecTemplate(StructTemplate, n)
 }
 
@@ -54,4 +54,14 @@ func (n *Node) PublicName() string {
 
 func (n *Node) PrivateName() string {
 	return converter.ToCamelCase(n.Name)
+}
+
+func (n *Node) ToParameter() string {
+	return utils.ExecTemplate(ParameterTemplate, n)
+}
+
+type Nodes []*Node
+
+func (n Nodes) ToParameters() string {
+	return utils.ExecTemplate(ParametersTemplate, n)
 }

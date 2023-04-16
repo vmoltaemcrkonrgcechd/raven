@@ -32,7 +32,7 @@ func (mod *Module) Create(columns []string) error {
 	rootName := mod.getName(EntityPkg, "create", mod.Table, "dto")
 
 	root := NewNode(
-		rootName, converter.StructType, EntityPkg, mod.Table, false, false,
+		rootName, rootName, EntityPkg, mod.Table, false, false,
 		"", false)
 
 	_, err := mod.FillNode(root, columns, nil)
@@ -41,6 +41,14 @@ func (mod *Module) Create(columns []string) error {
 	}
 
 	mod.Entities = append(mod.Entities, root)
+
+	mod.Repo.AddMethod(NewMethod(
+		mod.getName(RepoPkg, "", CreateType, ""),
+		mod.Repo.Node,
+		[]*Node{root},
+		[]*Node{},
+	),
+	)
 
 	return nil
 }
@@ -125,11 +133,11 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 	return node, nil
 }
 
-func (mod *Module) GenerateEntities() []byte {
+func (mod *Module) GenerateEntities() string {
 	return utils.ExecTemplate(EntitiesTemplate, mod)
 }
 
-func (mod *Module) GenerateRepo() []byte {
+func (mod *Module) GenerateRepo() string {
 	return utils.ExecTemplate(RepoTemplate, mod.Repo)
 }
 

@@ -6,19 +6,19 @@ import (
 	"text/template"
 )
 
-func ExecTemplate(text string, data any) []byte {
+func ExecTemplate(text string, data any) string {
 	buf := new(bytes.Buffer)
 
 	tpl, err := template.New("").Parse(text)
 	if err != nil {
 		fmt.Println(err)
-		return nil
+		return ""
 	}
 
 	if err = tpl.Execute(buf, data); err != nil {
 		fmt.Println(err)
-		return nil
+		return ""
 	}
 
-	return buf.Bytes()
+	return buf.String()
 }

@@ -7,7 +7,7 @@ const (
 		"struct {\n" +
 		"{{range .Children}}" +
 		"{{if .Children}}" +
-		"{{printf \"%s\" .Generate}}" +
+		"{{.Generate}}" +
 		"{{else}}" +
 		"{{if not .Embedded}}{{.PublicName}} {{end}}" +
 		"{{if .Many}}[]{{end}}" +
@@ -19,7 +19,22 @@ const (
 		"{{end}}}"
 
 	EntitiesTemplate = "{{range .Entities}}" +
-		"\ntype {{printf \"%s\" .Generate}}\n{{end}}"
+		"\ntype {{.Generate}}\n{{end}}"
 
-	RepoTemplate = "\ntype {{printf \"%s\" .Node.Generate}}\n"
+	RepoTemplate = "\ntype {{.Node.Generate}}\n" +
+		"{{range .Methods}}" +
+		"\n{{.Generate}}\n" +
+		"{{end}}"
+
+	MethodTemplate = "func {{if .Recipient}}" +
+		"({{.Recipient.PrivateName}} {{.Recipient.PublicName}}) {{end}}" +
+		"{{.Name}}({{.Parameters.ToParameters}})" +
+		"({{.Returns.ToParameters}}) {}"
+
+	ParameterTemplate = "{{.PrivateName}} {{if .Many}}[]{{end}}" +
+		"{{if .CanBeNil}}*{{end}}" +
+		"{{if ne .Pkg \"\"}}{{.Pkg}}.{{end}}" +
+		"{{.Type}}"
+
+	ParametersTemplate = "{{range $i, $v := .}}{{if ne $i 0}},{{end}}{{$v.ToParameter}}{{end}}"
 )
