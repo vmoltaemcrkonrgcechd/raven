@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"raven/pkg/converter"
 	"raven/pkg/postgres"
+	"raven/pkg/utils"
 	"raven/pkg/value"
 	"strconv"
 )
 
 type Module struct {
-	Table string
-	pg    *postgres.Postgres
-	names map[string]map[string]struct{}
+	Table    string
+	pg       *postgres.Postgres
+	names    map[string]map[string]struct{}
+	Entities []*Node
 }
 
 func NewModule(table string, pg *postgres.Postgres) *Module {
@@ -27,7 +29,7 @@ func (mod *Module) Create(columns []string) error {
 }
 
 func (mod *Module) Read(cmd ReadCommand) error {
-	rootName := mod.checkName(EntityPkg, fmt.Sprintf("All%sDTO", converter.ToPascalCase(mod.Table)), 0)
+	rootName := mod.checkName(EntityPkg, fmt.Sprintf("All%sDto", converter.ToPascalCase(mod.Table)), 0)
 
 	root := NewNode(
 		value.New(rootName, converter.StructType, EntityPkg, "", false, false),
@@ -46,7 +48,7 @@ func (mod *Module) Read(cmd ReadCommand) error {
 		return err
 	}
 
-	fmt.Println(string(root.Generate()))
+	mod.Entities = append(mod.Entities, root)
 
 	return nil
 }
@@ -104,6 +106,10 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 	}
 
 	return node, nil
+}
+
+func (mod *Module) GenerateEntities() []byte {
+	return utils.ExecTemplate(Entities, mod)
 }
 
 func (mod *Module) checkName(pkg, name string, n int) string {

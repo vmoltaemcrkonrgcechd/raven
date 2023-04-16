@@ -3,6 +3,7 @@ package back
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"raven/pkg/postgres"
@@ -33,23 +34,25 @@ type Config struct {
 	Commands []CommandJSON `json:"commands"`
 }
 
-func ReadConfig(name string) error {
+func ReadConfig(name string) (*Back, error) {
 	data, err := os.ReadFile(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var cfg Config
 	if err = json.Unmarshal(data, &cfg); err != nil {
-		return err
+		return nil, err
 	}
 
 	var pg *postgres.Postgres
 	if pg, err = postgres.New(cfg.PgURL); err != nil {
-		return err
+		return nil, err
 	}
 
-	return New(cfg.DirName, cfg.GoMod, cfg.PgURL, pg).ExecCommands(cfg.Commands)
+	back := New(cfg.DirName, cfg.GoMod, cfg.PgURL, pg)
+
+	return back, back.ExecCommands(cfg.Commands)
 }
 
 const (
@@ -59,7 +62,6 @@ const (
 const (
 	MainPkg     = "main"
 	RepoPkg     = "repo"
-	UseCasePkg  = "usecase"
 	RoutesPkg   = "routes"
 	EntityPkg   = "entity"
 	AppPkg      = "app"
@@ -69,7 +71,7 @@ const (
 
 const (
 	MainPath     = "/cmd/app"
-	RepoPath     = "/internal/" + UseCasePkg + "/" + RepoPkg
+	RepoPath     = "/internal/" + RepoPkg
 	RoutesPath   = "/internal/" + RoutesPkg
 	EntityPath   = "/internal/" + EntityPkg
 	AppPath      = "/internal/" + AppPkg
@@ -219,4 +221,25 @@ func (b *Back) Update(table string, columns []string) error {
 
 func (b *Back) Delete(table string) error {
 	return b.GetModule(table).Delete()
+}
+
+func (b *Back) Exec() error {
+	err := b.ProjectInit()
+	if err != nil {
+		return err
+	}
+
+	for k, v := range b.Modules {
+		if err = os.WriteFile(b.filenameForEntity(k),
+			append([]byte("package "+EntityPkg+"\n"), v.GenerateEntities()...),
+			Perm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (b *Back) filenameForEntity(name string) string {
+	return fmt.Sprintf("%s%s/%s.go", b.Dir, EntityPath, name)
 }

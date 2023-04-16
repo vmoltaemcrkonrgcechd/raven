@@ -1,12 +1,14 @@
 package main
 
-import (
-	"fmt"
-	"raven/pkg/back"
-)
+import "raven/pkg/back"
 
 func main() {
-	if err := back.ReadConfig("./.json"); err != nil {
-		fmt.Println(err)
+	b, err := back.ReadConfig("./join.json")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = b.Exec(); err != nil {
+		panic(err)
 	}
 }

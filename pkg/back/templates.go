@@ -16,4 +16,7 @@ const (
 		"{{end}}" +
 		"{{if ne .Tag \"\"}} `{{.Tag}}:\"{{.PrivateName}}\"` {{end}}\n" +
 		"{{end}}}"
+
+	Entities = "{{range .Entities}}" +
+		"\ntype {{printf \"%s\" .Generate}}\n{{end}}"
 )
