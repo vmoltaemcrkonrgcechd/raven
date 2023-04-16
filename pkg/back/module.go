@@ -13,22 +13,40 @@ type Module struct {
 	pg       *postgres.Postgres
 	names    map[string]map[string]struct{}
 	Entities []*Node
+	Repo     *Repo
 }
 
 func NewModule(table string, pg *postgres.Postgres) *Module {
-	return &Module{
+	mod := &Module{
 		Table: table,
 		pg:    pg,
 		names: make(map[string]map[string]struct{}),
 	}
+
+	mod.initRepo()
+
+	return mod
 }
 
 func (mod *Module) Create(columns []string) error {
+	rootName := mod.getName(EntityPkg, "create", mod.Table, "dto")
+
+	root := NewNode(
+		rootName, converter.StructType, EntityPkg, mod.Table, false, false,
+		"", false)
+
+	_, err := mod.FillNode(root, columns, nil)
+	if err != nil {
+		return err
+	}
+
+	mod.Entities = append(mod.Entities, root)
+
 	return nil
 }
 
 func (mod *Module) Read(cmd ReadCommand) error {
-	rootName := mod.checkName(EntityPkg, fmt.Sprintf("All%sDto", converter.ToPascalCase(mod.Table)), 0)
+	rootName := mod.getName(EntityPkg, "all", mod.Table, "dto")
 
 	root := NewNode(
 		rootName, converter.StructType, EntityPkg, "", false, false,
@@ -80,7 +98,7 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 		}
 
 		node.AddChild(NewNode(
-			name, typ, node.TableName, "", column.CanBeNil, false,
+			name, typ, "", "", column.CanBeNil, false,
 			JSONTag, false))
 	}
 
@@ -108,7 +126,18 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 }
 
 func (mod *Module) GenerateEntities() []byte {
-	return utils.ExecTemplate(Entities, mod)
+	return utils.ExecTemplate(EntitiesTemplate, mod)
+}
+
+func (mod *Module) GenerateRepo() []byte {
+	return utils.ExecTemplate(RepoTemplate, mod.Repo)
+}
+
+func (mod *Module) getName(pkg, prefix, name, suffix string) string {
+	return mod.checkName(pkg, fmt.Sprintf("%s%s%s",
+		converter.ToPascalCase(prefix),
+		converter.ToPascalCase(name),
+		converter.ToPascalCase(suffix)), 0)
 }
 
 func (mod *Module) checkName(pkg, name string, n int) string {
@@ -130,4 +159,14 @@ func (mod *Module) checkName(pkg, name string, n int) string {
 	mod.names[pkg][newName] = struct{}{}
 
 	return newName
+}
+
+func (mod *Module) initRepo() {
+	node := NewNode(PostgresPkg[:len(PostgresPkg)-1],
+		converter.ToPascalCase(PostgresPkg), PostgresPkg,
+		"", true, false, "", true)
+
+	mod.Repo = NewRepo(NewNode(mod.getName(RepoPkg, "", mod.Table, "repo"),
+		mod.getName(RepoPkg, "", mod.Table, "repo"), RepoPkg, "",
+		false, false, "", false).AddChild(node))
 }

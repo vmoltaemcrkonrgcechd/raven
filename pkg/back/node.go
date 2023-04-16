@@ -36,7 +36,7 @@ func (n *Node) AddChild(node *Node) *Node {
 }
 
 func (n *Node) Generate() []byte {
-	return utils.ExecTemplate(Struct, n)
+	return utils.ExecTemplate(StructTemplate, n)
 }
 
 const (

@@ -1,7 +1,7 @@
 package back
 
 const (
-	Struct = "{{.PublicName}} " +
+	StructTemplate = "{{.PublicName}} " +
 		"{{if .Many}}[]{{end}}" +
 		"{{if .CanBeNil}}*{{end}}" +
 		"struct {\n" +
@@ -12,11 +12,14 @@ const (
 		"{{if not .Embedded}}{{.PublicName}} {{end}}" +
 		"{{if .Many}}[]{{end}}" +
 		"{{if .CanBeNil}}*{{end}}" +
+		"{{if ne .Pkg \"\"}}{{.Pkg}}.{{end}}" +
 		"{{.Type}}" +
 		"{{end}}" +
 		"{{if ne .Tag \"\"}} `{{.Tag}}:\"{{.PrivateName}}\"` {{end}}\n" +
 		"{{end}}}"
 
-	Entities = "{{range .Entities}}" +
+	EntitiesTemplate = "{{range .Entities}}" +
 		"\ntype {{printf \"%s\" .Generate}}\n{{end}}"
+
+	RepoTemplate = "\ntype {{printf \"%s\" .Node.Generate}}\n"
 )

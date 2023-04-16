@@ -235,6 +235,12 @@ func (b *Back) Exec() error {
 			Perm); err != nil {
 			return err
 		}
+
+		if err = os.WriteFile(b.filenameForRepo(k),
+			append([]byte("package "+RepoPkg+"\n"), v.GenerateRepo()...),
+			Perm); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -242,4 +248,8 @@ func (b *Back) Exec() error {
 
 func (b *Back) filenameForEntity(name string) string {
 	return fmt.Sprintf("%s%s/%s.go", b.Dir, EntityPath, name)
+}
+
+func (b *Back) filenameForRepo(name string) string {
+	return fmt.Sprintf("%s%s/%s.go", b.Dir, RepoPath, name)
 }
