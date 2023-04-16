@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	if err := back.ReadConfig("./join.json"); err != nil {
+	if err := back.ReadConfig("./.json"); err != nil {
 		fmt.Println(err)
 	}
 }

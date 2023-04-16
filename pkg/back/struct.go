@@ -1,49 +1,39 @@
 package back
 
 import (
-	"bytes"
-	"fmt"
+	"raven/pkg/utils"
 	"raven/pkg/value"
-	"strings"
-	"text/template"
 )
 
-type StructField struct {
+type Node struct {
 	*value.Value
-	Struct []*StructField
-	Tag    string
+	Tag      string
+	Embedded bool
+	Children []*Node
 }
 
-func NewStructField(val *value.Value, tag string) *StructField {
-	return &StructField{
-		Value: val,
-		Tag:   tag,
+func NewNode(val *value.Value, tag string, embedded bool) *Node {
+	return &Node{
+		Value:    val,
+		Tag:      tag,
+		Embedded: embedded,
 	}
 }
+
+func (n *Node) AddChild(node *Node) *Node {
+	n.Children = append(n.Children, node)
+	return n
+}
+
+func (n *Node) Generate() []byte {
+	return utils.ExecTemplate(Struct, n)
+}
+
+const (
+	QuantityName = "quantity"
+	ContentName  = "content"
+)
 
 const (
 	JSONTag = "json"
 )
-
-func (s *StructField) Generate() []byte {
-	buf := new(bytes.Buffer)
-
-	template.Must(template.New("struct").Parse(Struct)).Execute(buf, s)
-
-	return buf.Bytes()
-}
-
-func (s *StructField) Log(n int) {
-	var space = strings.Repeat("  ", n)
-	msg := fmt.Sprint(space, s.TableName, ".", s.Name)
-
-	if s.Many {
-		msg += "[]"
-	}
-
-	fmt.Println(msg)
-
-	for _, str := range s.Struct {
-		str.Log(n + 1)
-	}
-}

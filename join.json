@@ -10,20 +10,17 @@
         "columns": ["article_id", "name"],
         "join": [
           {
-            "type": "inner",
             "table": "user",
             "columns": ["user_id", "username"],
             "use": "user_id"
           },
           {
-            "type": "left",
             "table": "article_like",
             "use": "article_id",
             "join": [
               {
-                "type": "left",
                 "table": "like",
-                "columns": ["like_id", "user_id"],
+                "columns": ["like_id"],
                 "use": "like_id",
                 "many": true,
                 "as": "likes",
@@ -39,6 +36,20 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "type": "read",
+      "table": "article",
+      "info": {
+        "columns": ["article_id", "name", "user_id"]
+      }
+    },
+    {
+      "type": "read",
+      "table": "article",
+      "info": {
+        "columns": ["user_id"]
       }
     }
   ]

@@ -39,8 +39,3 @@ CREATE TABLE article_like(
                                  REFERENCES article (article_id)
                                  ON DELETE CASCADE
 );
-
-SELECT article.article_id, article.name, "user".user_id, "user".username FROM article
-                                                                                  INNER JOIN "user" ON "user".user_id = article.user_id
-                                                                                  LEFT JOIN article_like ON article.article_id = article_like.article_id
-                                                                                  LEFT JOIN "like" ON "like".like_id = article_like.like_id;

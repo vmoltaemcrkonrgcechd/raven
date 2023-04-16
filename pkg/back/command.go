@@ -13,7 +13,6 @@ type CreateOrUpdateCommand struct {
 }
 
 type Join struct {
-	Type    string   `json:"type"`
 	Table   string   `json:"table"`
 	Columns []string `json:"columns"`
 	Use     string   `json:"use"`

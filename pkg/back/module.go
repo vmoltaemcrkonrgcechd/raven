@@ -1,22 +1,24 @@
 package back
 
 import (
-	"errors"
 	"fmt"
+	"raven/pkg/converter"
 	"raven/pkg/postgres"
-	"raven/pkg/utils"
 	"raven/pkg/value"
+	"strconv"
 )
 
 type Module struct {
 	Table string
 	pg    *postgres.Postgres
+	names map[string]map[string]struct{}
 }
 
 func NewModule(table string, pg *postgres.Postgres) *Module {
 	return &Module{
 		Table: table,
 		pg:    pg,
+		names: make(map[string]map[string]struct{}),
 	}
 }
 
@@ -25,12 +27,26 @@ func (mod *Module) Create(columns []string) error {
 }
 
 func (mod *Module) Read(cmd ReadCommand) error {
-	str, err := mod.joinStruct(mod.Table, mod.Table, false, false, cmd.Columns, cmd.Join)
+	rootName := mod.checkName(EntityPkg, fmt.Sprintf("All%sDTO", converter.ToPascalCase(mod.Table)), 0)
+
+	root := NewNode(
+		value.New(rootName, converter.StructType, EntityPkg, "", false, false),
+		"", false)
+
+	content := NewNode(
+		value.New(ContentName, converter.StructType, "", mod.Table, false, true),
+		JSONTag, false)
+
+	root.AddChild(content).AddChild(NewNode(
+		value.New(QuantityName, converter.IntType, "", "", false, false),
+		JSONTag, false))
+
+	_, err := mod.FillNode(content, cmd.Columns, cmd.Join)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(str.Generate()))
+	fmt.Println(string(root.Generate()))
 
 	return nil
 }
@@ -43,77 +59,70 @@ func (mod *Module) Delete() error {
 	return nil
 }
 
-func (mod *Module) newStruct(tableName, structName string, canBeNil, many bool, columns []string, tag string) (*StructField, error) {
-	table, err := mod.pg.GetTable(tableName)
+func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, error) {
+	table, err := mod.pg.GetTable(node.TableName)
 	if err != nil {
 		return nil, err
 	}
-
-	structField := NewStructField(value.New(structName, structName, EntityPkg, "", canBeNil, many), tag)
-
-	for _, columnName := range columns {
-		var column *postgres.Column
-		if column, err = table.GetColumn(columnName); err != nil {
-			return nil, err
-		}
-
-		var typ string
-		if typ, err = utils.PgToGoType(column.Type); err != nil {
-			return nil, err
-		}
-
-		structField.Struct = append(structField.Struct,
-			NewStructField(value.New(column.Name, typ, "", tableName, column.CanBeNil, false), tag))
-	}
-
-	return structField, nil
-}
-
-func (mod *Module) joinStruct(tableName, structName string,
-	canBeNil, many bool, columns []string, join []*Join) (*StructField, error) {
 
 	var (
-		structField *StructField
-		err         error
+		column *postgres.Column
+		typ    string
 	)
-	structField, err = mod.newStruct(tableName, structName, canBeNil, many, columns, JSONTag)
-	if err != nil {
-		return nil, err
+	for _, name := range columns {
+		if column, err = table.GetColumn(name); err != nil {
+			return nil, err
+		}
+
+		if typ, err = converter.PgToGoType(column.Type); err != nil {
+			return nil, err
+		}
+
+		node.AddChild(NewNode(
+			value.New(name, typ, node.TableName, "", column.CanBeNil, false),
+			JSONTag, false))
 	}
 
-	queue := new([]*Join)
+	for _, i := range join {
+		if len(i.Columns) > 0 {
+			childNode := NewNode(
+				value.New(i.Name(), converter.StructType, "", i.Table, false, i.Many),
+				JSONTag, false)
 
-	*queue = append(*queue, join...)
-
-	for _, j := range join {
-		if j.Use != "" {
-			var table *postgres.Table
-			if table, err = mod.pg.GetTable(tableName); err != nil {
+			if childNode, err = mod.FillNode(childNode, i.Columns, i.Join); err != nil {
 				return nil, err
 			}
 
-			var column *postgres.Column
-			if column, err = table.GetColumn(j.Use); err != nil {
-				return nil, err
-			}
-
-			var child *StructField
-			child, err = mod.joinStruct(j.Table, j.Name(), column.CanBeNil, j.Many, j.Columns, j.Join)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(j.Columns) == 0 {
-				structField.Struct = append(structField.Struct, child.Struct...)
-			} else {
-				structField.Struct = append(structField.Struct, child)
-			}
+			node.AddChild(childNode)
 
 			continue
 		}
 
-		return nil, errors.New("вам нужно указать, какое поле использовать для объединения таблиц")
+		if node, err = mod.FillNode(node, i.Columns, i.Join); err != nil {
+			return nil, err
+		}
 	}
 
-	return structField, nil
+	return node, nil
+}
+
+func (mod *Module) checkName(pkg, name string, n int) string {
+	if _, ok := mod.names[pkg]; !ok {
+		mod.names[pkg] = make(map[string]struct{})
+		mod.names[pkg][name] = struct{}{}
+		return name
+	}
+
+	newName := name
+	if n != 0 {
+		newName += strconv.Itoa(n)
+	}
+
+	if _, ok := mod.names[pkg][newName]; ok {
+		return mod.checkName(pkg, name, n+1)
+	}
+
+	mod.names[pkg][newName] = struct{}{}
+
+	return newName
 }
