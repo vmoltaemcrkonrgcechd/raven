@@ -5,7 +5,6 @@ import (
 	"raven/pkg/converter"
 	"raven/pkg/postgres"
 	"raven/pkg/utils"
-	"raven/pkg/value"
 	"strconv"
 )
 
@@ -32,15 +31,15 @@ func (mod *Module) Read(cmd ReadCommand) error {
 	rootName := mod.checkName(EntityPkg, fmt.Sprintf("All%sDto", converter.ToPascalCase(mod.Table)), 0)
 
 	root := NewNode(
-		value.New(rootName, converter.StructType, EntityPkg, "", false, false),
+		rootName, converter.StructType, EntityPkg, "", false, false,
 		"", false)
 
 	content := NewNode(
-		value.New(ContentName, converter.StructType, "", mod.Table, false, true),
+		ContentName, converter.StructType, "", mod.Table, false, true,
 		JSONTag, false)
 
 	root.AddChild(content).AddChild(NewNode(
-		value.New(QuantityName, converter.IntType, "", "", false, false),
+		QuantityName, converter.IntType, "", "", false, false,
 		JSONTag, false))
 
 	_, err := mod.FillNode(content, cmd.Columns, cmd.Join)
@@ -81,14 +80,14 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 		}
 
 		node.AddChild(NewNode(
-			value.New(name, typ, node.TableName, "", column.CanBeNil, false),
+			name, typ, node.TableName, "", column.CanBeNil, false,
 			JSONTag, false))
 	}
 
 	for _, i := range join {
 		if len(i.Columns) > 0 {
 			childNode := NewNode(
-				value.New(i.Name(), converter.StructType, "", i.Table, false, i.Many),
+				i.Name(), converter.StructType, "", i.Table, false, i.Many,
 				JSONTag, false)
 
 			if childNode, err = mod.FillNode(childNode, i.Columns, i.Join); err != nil {
