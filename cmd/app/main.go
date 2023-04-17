@@ -3,7 +3,7 @@ package main
 import "raven/pkg/back"
 
 func main() {
-	b, err := back.ReadConfig("./join.json")
+	b, err := back.ReadConfig("./.json")
 	if err != nil {
 		panic(err)
 	}

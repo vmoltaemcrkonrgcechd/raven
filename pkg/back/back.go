@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"raven/pkg/postgres"
+	"raven/pkg/utils"
 )
 
 type Back struct {
@@ -117,6 +118,10 @@ func (b *Back) ProjectInit() error {
 		return err
 	}
 
+	if err = b.InitConfig(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -151,6 +156,23 @@ func (b *Back) InstallDependencies() error {
 		if err = cmd.Run(); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (b *Back) InitConfig() error {
+	err := os.WriteFile(b.filenameForConfig("yaml"), []byte(utils.ExecTemplate(ConfigYamlTemplate, b)), Perm)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(b.filenameForConfig("go"), []byte(utils.ExecTemplate(ConfigTemplate, b)), Perm); err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(b.Dir+"/.env", []byte("PG_URL="+b.PgURL), Perm); err != nil {
+		return err
 	}
 
 	return nil
@@ -252,4 +274,8 @@ func (b *Back) filenameForEntity(name string) string {
 
 func (b *Back) filenameForRepo(name string) string {
 	return fmt.Sprintf("%s%s/%s.go", b.Dir, RepoPath, name)
+}
+
+func (b *Back) filenameForConfig(ext string) string {
+	return fmt.Sprintf("%s%s/config.%s", b.Dir, ConfigPath, ext)
 }

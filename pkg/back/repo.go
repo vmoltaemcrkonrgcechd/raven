@@ -2,7 +2,7 @@ package back
 
 type Repo struct {
 	Node        *Node
-	Methods     []*Method
+	Methods     []*RepoMethod
 	Constructor *Method
 }
 
@@ -15,7 +15,7 @@ func NewRepo(node *Node) *Repo {
 	}
 }
 
-func (r *Repo) AddMethod(method *Method) *Repo {
+func (r *Repo) AddMethod(method *RepoMethod) *Repo {
 	r.Methods = append(r.Methods, method)
 	return r
 }

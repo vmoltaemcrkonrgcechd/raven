@@ -46,4 +46,23 @@ const (
 	TypesTemplate = "{{range $i, $v := .}}{{if ne $i 0}},{{end}}{{$v.Type}}{{end}}"
 
 	ConstructorTemplate = "return {{.Returns.Types}}{ {{.Parameters.Names}} }"
+
+	CreateTemplate = "if {{.Returns.ErrNode.PrivateName}} = {{.Recipient.PrivateName}}.Sq.Insert(\"\\\"{{.TableName}}\\\"\").\n" +
+		"Columns().\nValues().\nSuffix(\"RETURNING {{.Returns.IDNode.Name}}\")." +
+		"QueryRow().Scan(&{{.Returns.IDNode.PrivateName}}); {{.Returns.ErrNode.PrivateName}} != nil {\n" +
+		"return {{.Returns.Names}}\n}\n\n" +
+		"return {{.Returns.Names}}"
+
+	ConfigTemplate = "package config\n\n" +
+		"type Config struct {\n" +
+		"HTTPAddr   string `yaml:\"httpAddr\"`\nPgURL      string `env:\"PG_URL\"`\n}\n\n" +
+		"func New() (*Config, error) {\n" +
+		"cfg := new(Config)\n\n" +
+		"err := cleanenv.ReadConfig(\"./config/config.yaml\", cfg)\n" +
+		"if err != nil {\nreturn nil, err\n}\n\n" +
+		"if err = godotenv.Load(); err != nil {\nreturn nil, err\n}\n\n" +
+		"if err = cleanenv.ReadEnv(cfg); err != nil {\nreturn nil, err\n}\n\n" +
+		"return cfg, nil\n}\n"
+
+	ConfigYamlTemplate = "httpAddr: \":80\"\n"
 )

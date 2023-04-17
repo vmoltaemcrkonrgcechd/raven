@@ -75,3 +75,23 @@ func (n Nodes) Names() string {
 func (n Nodes) Types() string {
 	return utils.ExecTemplate(TypesTemplate, n)
 }
+
+func (n Nodes) ErrNode() *Node {
+	for _, node := range n {
+		if node == ErrNode {
+			return node
+		}
+	}
+
+	return nil
+}
+
+func (n Nodes) IDNode() *Node {
+	for _, node := range n {
+		if node == IDNode {
+			return node
+		}
+	}
+
+	return nil
+}

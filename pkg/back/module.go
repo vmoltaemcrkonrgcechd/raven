@@ -43,7 +43,7 @@ func (mod *Module) Create(columns []string) error {
 
 	root := NewNode(
 		rootName, rootName, EntityPkg, mod.Table, false, false,
-		"", false, EntityPkg)
+		"", false, "")
 
 	if _, err = mod.FillNode(root, columns, nil); err != nil {
 		return err
@@ -51,13 +51,14 @@ func (mod *Module) Create(columns []string) error {
 
 	mod.Entities = append(mod.Entities, root)
 
-	mod.Repo.AddMethod(NewMethod(
-		mod.getName(RepoPkg, "", CreateType, ""),
-		mod.Repo.Node,
-		[]*Node{root},
-		[]*Node{IDNode, ErrNode},
-		"",
-	),
+	mod.Repo.AddMethod(NewRepoMethod(
+		NewMethod(
+			mod.getName(RepoPkg, "", CreateType, ""),
+			mod.Repo.Node,
+			[]*Node{root},
+			[]*Node{IDNode, ErrNode},
+			CreateTemplate,
+		), mod.Table),
 	)
 
 	return nil

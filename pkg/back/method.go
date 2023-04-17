@@ -1,6 +1,8 @@
 package back
 
-import "raven/pkg/utils"
+import (
+	"raven/pkg/utils"
+)
 
 type Method struct {
 	Name       string
@@ -25,5 +27,25 @@ func (m *Method) Generate() string {
 }
 
 func (m *Method) GenerateBody() string {
+	return utils.ExecTemplate(m.Body, m)
+}
+
+type RepoMethod struct {
+	*Method
+	TableName string
+}
+
+func NewRepoMethod(method *Method, tableName string) *RepoMethod {
+	return &RepoMethod{
+		Method:    method,
+		TableName: tableName,
+	}
+}
+
+func (m *RepoMethod) Generate() string {
+	return utils.ExecTemplate(MethodTemplate, m)
+}
+
+func (m *RepoMethod) GenerateBody() string {
 	return utils.ExecTemplate(m.Body, m)
 }
