@@ -122,6 +122,10 @@ func (b *Back) ProjectInit() error {
 		return err
 	}
 
+	if err = b.InitPostgres(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -172,6 +176,15 @@ func (b *Back) InitConfig() error {
 	}
 
 	if err = os.WriteFile(b.Dir+"/.env", []byte("PG_URL="+b.PgURL), Perm); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Back) InitPostgres() error {
+	err := os.WriteFile(b.filenameForPostgres(), []byte(utils.ExecTemplate(PostgresTemplate, b)), Perm)
+	if err != nil {
 		return err
 	}
 
@@ -277,5 +290,9 @@ func (b *Back) filenameForRepo(name string) string {
 }
 
 func (b *Back) filenameForConfig(ext string) string {
-	return fmt.Sprintf("%s%s/config.%s", b.Dir, ConfigPath, ext)
+	return fmt.Sprintf("%s%s/%s.%s", b.Dir, ConfigPath, ConfigPkg, ext)
+}
+
+func (b *Back) filenameForPostgres() string {
+	return fmt.Sprintf("%s%s/%s.go", b.Dir, PostgresPath, PostgresPkg)
 }

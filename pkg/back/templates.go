@@ -65,4 +65,16 @@ const (
 		"return cfg, nil\n}\n"
 
 	ConfigYamlTemplate = "httpAddr: \":80\"\n"
+
+	PostgresTemplate = "package postgres\n\n" +
+		"type Postgres struct {\nSq squirrel.StatementBuilderType\n" +
+		"DB *sql.DB\n}\n\n" +
+		"func New(cfg *config.Config) (*Postgres, error) {\n" +
+		"db, err := sql.Open(\"postgres\", cfg.PgURL)\n" +
+		"if err != nil {\nreturn nil, err\n}\n\n" +
+		"if err = db.Ping(); err != nil {\n" +
+		"return nil, err\n}\n\n" +
+		"return &Postgres{\nSq: squirrel.StatementBuilder.\n" +
+		"PlaceholderFormat(squirrel.Dollar).RunWith(db),\n" +
+		"DB: db,\n}, nil\n}\n"
 )
