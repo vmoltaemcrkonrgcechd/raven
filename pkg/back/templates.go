@@ -43,12 +43,17 @@ const (
 
 	NamesTemplate = "{{range $i, $v := .}}{{if ne $i 0}},{{end}}{{$v.PrivateName}}{{end}}"
 
+	SQLNamesTemplate = "{{range $i, $v := .}}{{if ne $i 0}},{{end}}\"{{$v.Name}}\"{{end}}"
+
 	TypesTemplate = "{{range $i, $v := .}}{{if ne $i 0}},{{end}}{{$v.Type}}{{end}}"
 
 	ConstructorTemplate = "return {{.Returns.Types}}{ {{.Parameters.Names}} }"
 
 	CreateTemplate = "if {{.Returns.ErrNode.PrivateName}} = {{.Recipient.PrivateName}}.Sq.Insert(\"\\\"{{.TableName}}\\\"\").\n" +
-		"Columns().\nValues().\nSuffix(\"RETURNING {{.Returns.IDNode.Name}}\")." +
+		"{{$entity := index .Parameters 0}}" +
+		"Columns({{$entity.Children.SQLNames}}).\n" +
+		"Values({{range $i, $v := $entity.Children}}{{if ne $i 0}},{{end}}{{$entity.PrivateName}}.{{$v.PublicName}}{{end}}).\n" +
+		"Suffix(\"RETURNING {{.Returns.IDNode.Name}}\")." +
 		"QueryRow().Scan(&{{.Returns.IDNode.PrivateName}}); {{.Returns.ErrNode.PrivateName}} != nil {\n" +
 		"return {{.Returns.Names}}\n}\n\n" +
 		"return {{.Returns.Names}}"

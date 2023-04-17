@@ -95,3 +95,7 @@ func (n Nodes) IDNode() *Node {
 
 	return nil
 }
+
+func (n Nodes) SQLNames() string {
+	return utils.ExecTemplate(SQLNamesTemplate, n)
+}

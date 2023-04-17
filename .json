@@ -1,5 +1,5 @@
 {
-  "pgURL": "postgresql://postgres:130263@:5432/example?sslmode=disable",
+  "pgURL": "postgresql://postgres:4100@:4100/example?sslmode=disable",
   "goMod": "DELETE_ME",
   "dirName": "DELETE_ME",
   "commands": [
