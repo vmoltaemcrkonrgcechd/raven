@@ -29,7 +29,7 @@ func NewModule(table string, pg *postgres.Postgres) *Module {
 }
 
 var (
-	ErrNode = NewNode("err", "error", "", "", false, false, "", false)
+	ErrNode = NewNode("err", "error", "", "", false, false, "", false, "")
 	IDNode  *Node
 )
 
@@ -43,7 +43,7 @@ func (mod *Module) Create(columns []string) error {
 
 	root := NewNode(
 		rootName, rootName, EntityPkg, mod.Table, false, false,
-		"", false)
+		"", false, EntityPkg)
 
 	if _, err = mod.FillNode(root, columns, nil); err != nil {
 		return err
@@ -56,6 +56,7 @@ func (mod *Module) Create(columns []string) error {
 		mod.Repo.Node,
 		[]*Node{root},
 		[]*Node{IDNode, ErrNode},
+		"",
 	),
 	)
 
@@ -67,15 +68,15 @@ func (mod *Module) Read(cmd ReadCommand) error {
 
 	root := NewNode(
 		rootName, converter.StructType, EntityPkg, "", false, false,
-		"", false)
+		"", false, EntityPkg)
 
 	content := NewNode(
 		ContentName, converter.StructType, "", mod.Table, false, true,
-		JSONTag, false)
+		JSONTag, false, "")
 
 	root.AddChild(content).AddChild(NewNode(
 		QuantityName, converter.IntType, "", "", false, false,
-		JSONTag, false))
+		JSONTag, false, ""))
 
 	_, err := mod.FillNode(content, cmd.Columns, cmd.Join)
 	if err != nil {
@@ -101,7 +102,7 @@ func (mod *Module) Delete() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -126,14 +127,14 @@ func (mod *Module) FillNode(node *Node, columns []string, join []*Join) (*Node, 
 
 		node.AddChild(NewNode(
 			name, typ, "", "", column.CanBeNil, false,
-			JSONTag, false))
+			JSONTag, false, ""))
 	}
 
 	for _, i := range join {
 		if len(i.Columns) > 0 {
 			childNode := NewNode(
 				i.Name(), converter.StructType, "", i.Table, false, i.Many,
-				JSONTag, false)
+				JSONTag, false, "")
 
 			if childNode, err = mod.FillNode(childNode, i.Columns, i.Join); err != nil {
 				return nil, err
@@ -189,13 +190,13 @@ func (mod *Module) checkName(pkg, name string, n int) string {
 }
 
 func (mod *Module) initRepo() {
-	node := NewNode(PostgresPkg[:len(PostgresPkg)-1],
-		converter.ToPascalCase(PostgresPkg), PostgresPkg,
-		"", true, false, "", true)
+	node := NewNode("pg", converter.ToPascalCase(PostgresPkg), PostgresPkg,
+		"", true, false, "", true, RepoPkg)
 
-	mod.Repo = NewRepo(NewNode(mod.getName(RepoPkg, "", mod.Table, "repo"),
-		mod.getName(RepoPkg, "", mod.Table, "repo"), RepoPkg, "",
-		false, false, "", false).AddChild(node))
+	repoName := mod.getName(RepoPkg, "", mod.Table, "repo")
+
+	mod.Repo = NewRepo(NewNode(repoName, repoName, RepoPkg, "",
+		false, false, "", false, RepoPkg).AddChild(node))
 }
 
 func (mod *Module) initIDNode() error {
@@ -219,7 +220,7 @@ func (mod *Module) initIDNode() error {
 	}
 
 	IDNode = NewNode(pk.Name, typ, "",
-		mod.Table, false, false, "", false)
+		mod.Table, false, false, "", false, "")
 
 	return nil
 }

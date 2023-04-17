@@ -7,17 +7,23 @@ type Method struct {
 	Recipient  *Node
 	Parameters Nodes
 	Returns    Nodes
+	Body       string
 }
 
-func NewMethod(name string, recipient *Node, parameters Nodes, returns Nodes) *Method {
+func NewMethod(name string, recipient *Node, parameters Nodes, returns Nodes, body string) *Method {
 	return &Method{
 		Name:       name,
 		Recipient:  recipient,
 		Parameters: parameters,
 		Returns:    returns,
+		Body:       body,
 	}
 }
 
 func (m *Method) Generate() string {
 	return utils.ExecTemplate(MethodTemplate, m)
+}
+
+func (m *Method) GenerateBody() string {
+	return utils.ExecTemplate(m.Body, m)
 }

@@ -15,9 +15,10 @@ type Node struct {
 	Tag       string
 	Embedded  bool
 	Children  Nodes
+	IgnorePkg string
 }
 
-func NewNode(name, typ, pkg, tableName string, canBeNil, many bool, tag string, embedded bool) *Node {
+func NewNode(name, typ, pkg, tableName string, canBeNil, many bool, tag string, embedded bool, ignorePkg string) *Node {
 	return &Node{
 		Name:      name,
 		Type:      typ,
@@ -27,6 +28,7 @@ func NewNode(name, typ, pkg, tableName string, canBeNil, many bool, tag string, 
 		TableName: tableName,
 		Tag:       tag,
 		Embedded:  embedded,
+		IgnorePkg: ignorePkg,
 	}
 }
 
@@ -64,4 +66,12 @@ type Nodes []*Node
 
 func (n Nodes) ToParameters() string {
 	return utils.ExecTemplate(ParametersTemplate, n)
+}
+
+func (n Nodes) Names() string {
+	return utils.ExecTemplate(NamesTemplate, n)
+}
+
+func (n Nodes) Types() string {
+	return utils.ExecTemplate(TypesTemplate, n)
 }
